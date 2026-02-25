@@ -247,6 +247,9 @@
             state: present
             update_cache: yes
 
+        - name: Update CA certificates
+          command: update-ca-certificates
+
         - name: Add Docker GPG key
           apt_key:
             url: https://download.docker.com/linux/ubuntu/gpg

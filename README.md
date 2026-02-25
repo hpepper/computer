@@ -2,9 +2,9 @@
 
 Setting up a computer for development
 
-- `git clone git@github.com:hpepper/computer.git`
+- `git clone https://github.com/hpepper/computer.git`
 - sudo apt install ansible
-- sudo ansible-playbook playbooks/package.yaml -e "username=$USER user_home=/home/$USER"
+- sudo ansible-playbook playbooks/developer.yaml -e "username=$USER user_home=/home/$USER"
 - zsh
   - go through the installation
 - cargo install eza
