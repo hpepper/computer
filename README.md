@@ -44,3 +44,8 @@ Install kvm
 - Add sepearate kvm.yaml playbook for laptops.
 - can I make a dashboard using ratatui?
 - pomodoro
+
+## Troubleshooting
+
+sudo apt install --reinstall ca-certificates python3-certifi
+sudo update-ca-certificates
