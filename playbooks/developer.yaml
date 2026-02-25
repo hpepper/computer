@@ -1,0 +1,484 @@
+---
+- name: Install Git and Curl locally
+  hosts: localhost
+  become: yes
+  connection: local
+
+  vars:
+    username: developer
+    user_home: "/home/developer"
+    cheat_snap_config: "{{ user_home }}/snap/cheat/common/.config/cheat"
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install applications
+      apt:
+        name:
+          - byobu
+          - curl
+          - falkon
+          - firefox
+          - git
+          - htop
+          - hwinfo
+          - jq
+          - screen
+          - shellcheck
+          - silversearcher-ag
+          - tmux
+          - usbtop
+          - vim
+          - zsh
+        state: present
+
+    - name: Set default shell to zsh for user {{ username }}
+      user:
+        name: "{{ username }}"
+        shell: /bin/zsh
+
+
+    - name: Cheat configuration block
+      block:
+
+        - name: Ensure snapd is installed
+          apt:
+            name: snapd
+            state: present
+            update_cache: yes
+
+        - name: Install cheat via snap
+          snap:
+            name: cheat
+            classic: yes
+            state: present
+
+        - name: Verify cheat installation
+          command: cheat --version
+          register: cheat_version
+          changed_when: false
+
+        - debug:
+            var: cheat_version.stdout
+
+        - name: Ensure cheat config directory exists
+          file:
+            path: "{{ cheat_snap_config }}"
+            state: directory
+            owner: "{{ username }}"
+            group: "{{ username }}"
+            mode: '0755'
+
+        - name: Create cheat conf.yml
+          copy:
+            dest: "{{ cheat_snap_config }}/conf.yml"
+            owner: "{{ username }}"
+            group: "{{ username }}"
+            mode: '0644'
+            content: |
+              cheatpaths:
+                - name: community
+                  path: "{{ cheat_snap_config }}/cheatsheets/community"
+                  tags: [community]
+                  readonly: true
+
+                - name: personal
+                  path: "{{ cheat_snap_config }}/cheatsheets/personal"
+                  tags: [personal]
+                  readonly: false
+
+        - name: Ensure cheat cheatsheets directory exists
+          file:
+            path: "{{ cheat_snap_config }}/cheatsheets"
+            state: directory
+            owner: "{{ username }}"
+            group: "{{ username }}"
+            mode: '0755'
+
+        - name: Clone community cheatsheets
+          git:
+            repo: https://github.com/cheat/cheatsheets.git
+            dest: "{{ cheat_snap_config }}/cheatsheets/community"
+            version: master
+            update: yes
+          become_user: "{{ username }}"
+
+        - name: Ensure personal cheatsheets directory exists
+          file:
+            path: "{{ cheat_snap_config }}/cheatsheets/personal"
+            state: directory
+            owner: "{{ username }}"
+            group: "{{ username }}"
+            mode: '0755'
+
+
+        - name: Copy personal cheatsheets
+          copy:
+            src: files/cheatsheets/
+            dest: "{{ cheat_snap_config }}/cheatsheets/personal/"
+            owner: "{{ username }}"
+            group: "{{ username }}"
+            mode: '0644'
+
+      tags:
+        - cheat
+
+    - name: Copy gitconfig
+      copy:
+        src: files/gitconfig
+        dest: "{{ user_home }}/.gitconfig"
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: '0600'
+
+    - name: btop installation block
+      block:
+
+        - name: Ensure snapd is installed
+          apt:
+            name: snapd
+            state: present
+            update_cache: yes
+
+        - name: Install btop snap
+          snap:
+            name: btop
+            state: present
+
+        - name: Verify btop installation
+          command: btop --version
+          register: btop_version
+          changed_when: false
+
+        - debug:
+            var: btop_version.stdout
+
+      tags:
+        - btop
+
+    - name: Ensure snapd is installed
+      apt:
+        name: snapd
+        state: present
+        update_cache: yes
+
+    - name: Install Chromium via snap
+      snap:
+        name: chromium
+        state: present
+
+
+    - name: yq installation block (snap)
+      block:
+
+        - name: Ensure snapd is installed
+          apt:
+            name: snapd
+            state: present
+            update_cache: yes
+
+        - name: Install yq snap
+          snap:
+            name: yq
+            classic: yes
+            state: present
+
+        - name: Verify yq installation
+          command: yq --version
+          register: yq_version
+          changed_when: false
+
+        - debug:
+            var: yq_version.stdout
+
+      tags:
+        - yq
+
+
+    - name: Helix installation block
+      block:
+
+        - name: Ensure snapd is installed
+          apt:
+            name: snapd
+            state: present
+            update_cache: yes
+
+        - name: Install Helix
+          snap:
+            name: helix
+            classic: yes
+            state: present
+
+        - name: Verify Helix installation
+          command: hx --version
+          register: helix_version
+          changed_when: false
+
+        - debug:
+            var: helix_version.stdout
+
+      tags:
+        - helix
+
+    - name: Docker installation block
+      block:
+
+        - name: Remove old Docker versions
+          apt:
+            name:
+              - docker
+              - docker-engine
+              - docker.io
+              - containerd
+              - runc
+            state: absent
+
+        - name: Install required dependencies
+          apt:
+            name:
+              - apt-transport-https
+              - ca-certificates
+              - curl
+              - gnupg
+              - lsb-release
+            state: present
+            update_cache: yes
+
+        - name: Add Docker GPG key
+          apt_key:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            state: present
+
+        - name: Add Docker repository
+          apt_repository:
+            repo: "deb https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+            state: present
+
+        - name: Install Docker Engine
+          apt:
+            name:
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+            state: present
+            update_cache: yes
+
+        - name: Enable and start Docker
+          service:
+            name: docker
+            state: started
+            enabled: yes
+
+        - name: Add current user to docker group
+          user:
+            name: "{{ ansible_user_id }}"
+            groups: docker
+            append: yes
+
+
+    - name: Minikube installation block
+      block:
+
+        - name: Ensure required packages are installed
+          apt:
+            name:
+              - curl
+              - conntrack
+            state: present
+            update_cache: yes
+
+        - name: Download Minikube binary
+          get_url:
+            url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+            dest: /usr/local/bin/minikube
+            mode: '0755'
+
+        - name: Verify Minikube installation
+          command: minikube version
+          register: minikube_version
+          changed_when: false
+
+        - name: Show Minikube version
+          debug:
+            var: minikube_version.stdout
+
+      tags:
+        - minikube
+
+    - name: VS Code installation block
+      block:
+
+        - name: vscode - Install required packages
+          apt:
+            name:
+              - wget
+              - gpg
+              - software-properties-common
+            state: present
+            update_cache: yes
+
+        - name: vscode - Import Microsoft GPG key
+          apt_key:
+            url: https://packages.microsoft.com/keys/microsoft.asc
+            state: present
+
+        - name: Add VS Code repository
+          apt_repository:
+            repo: "deb [arch=amd64] https://packages.microsoft.com/repos/code stable main"
+            state: present
+
+        - name: vscode - Update apt cache after adding repo
+          apt:
+            update_cache: yes
+
+        - name: Install VS Code
+          apt:
+            name: code
+            state: present
+
+      tags:
+        - vscode
+
+
+    - name: Rust installation block
+      block:
+
+        - name: rust - Ensure required packages are installed
+          apt:
+            name:
+              - curl
+              - build-essential
+            state: present
+            update_cache: yes
+
+        - name: Install Rust via rustup {{ user_home }} as {{ username }}
+          shell: |
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          args:
+            creates: "{{ user_home }}/.cargo/bin/rustc"
+          become_user: "{{ username }}"
+
+        - name: rust - Add Cargo bin directory to PATH in .zshrc
+          lineinfile:
+            path: "{{ user_home }}/.zshrc"
+            line: 'export PATH="$HOME/.cargo/bin:$PATH"'
+            state: present
+          become_user: "{{ username }}"
+
+        - name: Verify Rust installation
+          shell: "{{ user_home }}/.cargo/bin/rustc --version"
+          register: rust_version
+          changed_when: false
+          become_user: "{{ username }}"
+
+        - debug:
+            var: rust_version.stdout
+
+      tags:
+        - rust
+
+
+    - name: Dropbox installation block (deb)
+      block:
+
+        - name: Download Dropbox .deb package
+          get_url:
+            url: "https://www.dropbox.com/download?dl=packages/ubuntu/dropbox_2020.03.04_amd64.deb"
+            dest: /tmp/dropbox.deb
+            mode: '0644'
+
+        - name: Install Dropbox package
+          apt:
+            deb: /tmp/dropbox.deb
+
+        - name: Remove Dropbox installer file
+          file:
+            path: /tmp/dropbox.deb
+            state: absent
+
+        - name: Verify Dropbox installation
+          command: dropbox version
+          register: dropbox_version
+          changed_when: false
+          ignore_errors: yes
+
+        - debug:
+            var: dropbox_version.stdout
+
+      tags:
+        - dropbox
+
+    - name: Ensure zsh is installed
+      apt:
+        name: zsh
+        state: present
+        update_cache: yes
+
+    - name: Ensure git is installed
+      apt:
+        name: git
+        state: present
+
+    - name: Clone Zinit repository
+      git:
+        repo: https://github.com/zdharma-continuum/zinit.git
+        dest: "{{ user_home }}/.zinit/bin"
+        version: main
+      become_user: "{{ username }}"
+
+    - name: Add Zinit to .zshrc
+      blockinfile:
+        path: "{{ user_home }}/.zshrc"
+        create: yes
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        block: |
+          ### Zinit Setup ###
+          source ~/.zinit/bin/zinit.zsh
+
+          autoload -Uz _zinit
+          (( ${+_comps} )) && _comps[zinit]=_zinit
+
+          # Load a few important annexes, without Turbo
+          # (this is currently required for annexes)
+          zinit light-mode for \
+              zdharma-continuum/zinit-annex-as-monitor \
+              zdharma-continuum/zinit-annex-bin-gem-node \
+              zdharma-continuum/zinit-annex-patch-dl \
+              zdharma-continuum/zinit-annex-rust
+
+          zinit light zsh-users/zsh-syntax-highlighting
+          zinit light zsh-users/zsh-completions
+          zinit light zsh-users/zsh-autosuggestions
+          # -> to complete
+          # crtl+-> will accept next part of the
+
+          zinit light zsh-users/zsh-history-substring-search
+
+
+          zinit ice depth"1" # git clone depth
+          zinit light romkatv/powerlevel10k
+
+          ### End of Zinit's installer chunk
+
+          # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+          [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+          title() {
+            [[ -t 1 ]] && print -Pn "\e]0;$*\a"
+          }
+
+          alias k='kubectl'
+          alias kc='kubectl'
+          alias l='eza -F'
+          alias la='eza -A'
+          alias lg='eza --long --git --all --no-permissions --no-filesize --no-user --no-time'
+          alias ll='eza --long --git --all'
+          alias lt='eza --long --git --all --sort=modified'
+          alias m='mplayer -fs -zoom'
+          alias mk='minikube'
+          alias tf='terraform'
+          

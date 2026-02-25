@@ -1,0 +1,87 @@
+[push]
+	default = simple
+
+[alias]
+    a = add
+    # Amend the previous commit
+    amend = commit --amend --reset-author --verbose
+    # Commit and show diff in editor too
+    ci = commit --verbose
+    co = checkout
+    up = pull --ff-only
+    st = status
+    # Show status for current sub-directory only
+    s = status -- .
+    # List all branches (locally and remote)
+    br = branch -a
+    # Remove branch
+    rmbr = branch -d
+    # Remvoe remote branch (locally)
+    rmrbr = branch -d -r
+    # Remvoe remote branch (locally)
+    rmrbr = branch -d -r
+    # Show the staged/cached/indexed changes
+    idiff = diff --cached
+    # Show info about tree objects
+    ls = ls-tree HEAD
+    # Show info about all tree objects
+    list = ls-tree --full-tree -r HEAD
+    pick = cherry-pick
+
+    unstash = stash pop
+    # Unapply the changes recorded in the most resent stash
+    stash-unapply = !git stash show -p | git apply -R
+
+    # Show summary info about a commit
+    s = show --name-only --pretty=fuller
+
+    # Create a Work In Progress commit (alternative to stash)
+    wip = commit --all -m WIP
+
+    # Show commits that have not been pushed yet
+    # sc:  show commits (ahead)
+    # scg: show commits (ahead) graph
+    sc = log '@{upstream}'..HEAD --oneline --decorate
+    scg = log '@{upstream}'..HEAD --oneline --decorate --graph
+    # The same but with full commit messages
+    # scl:  show commits (ahead) long
+    # sclg: show commits (ahead) long graph
+    scl = log '@{upstream}'..HEAD --decorate
+    sclg = log '@{upstream}'..HEAD --decorate --graph
+
+    # Single-line or short log of everything
+    slog = log --graph --format=oneline --all
+    # Single-line or short branch log
+    blog = log --graph --format=oneline
+    # Single-line or short log of everything with more info
+    hist = log --pretty=format:\"%C(auto)%h %ad |%d %s [%Cblue%an%Creset]\" --graph --date=local --all
+    # Single-line or short branch log with more info
+    bhist = log --pretty=format:\"%C(auto)%h %ad |%d %s [%Cblue%an%Creset]\" --graph --date=local
+
+    # prune orphan commits / housekeeping
+    prune = gc --prune=now --aggressive
+    oldest-ancestor = !zsh -c 'diff --old-line-format= --new-line-format= <(git rev-list --first-parent \"${1:-master}\") <(git rev-list --first-parent \"${2:-HEAD}\") | head -1' -
+
+[color]
+    # Show colour on terminals
+    ui = auto
+
+[log]
+    # abbreviate commit hashes
+    abbrevCommit = true
+    # show tags, branches, etc. in logs
+    decorate = short
+
+[push]
+    # The default as of git 2.0, and the safest for beginners :)
+    default = simple
+
+[rerere]
+    # Record conflict resolutions
+    enabled = true
+
+[core]
+    pager = less -i -S
+    editor = vim
+[init]
+	defaultBranch = main

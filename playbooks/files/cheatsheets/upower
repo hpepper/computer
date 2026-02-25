@@ -1,0 +1,6 @@
+---
+syntax: bash
+tags: [ power ]
+---
+# Dump power information
+upower -d
