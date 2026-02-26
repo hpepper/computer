@@ -13,6 +13,14 @@ start dropbox and configure it.
 
 Install kvm
 
+### Fix for Dell Ubuntu 20 recovery image
+
+```bash
+sudo mkdir -p /usr/local/ssl
+sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/ssl/cert.pem
+sudo ln -sf /etc/ssl/certs /usr/local/ssl/certs
+```
+
 ## Tools
 
 ### CLI tools
