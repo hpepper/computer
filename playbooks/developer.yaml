@@ -343,43 +343,6 @@
         - vscode
 
 
-    - name: Rust installation block
-      block:
-
-        - name: rust - Ensure required packages are installed
-          apt:
-            name:
-              - curl
-              - build-essential
-            state: present
-            update_cache: yes
-
-        - name: Install Rust via rustup {{ user_home }} as {{ username }}
-          shell: |
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          args:
-            creates: "{{ user_home }}/.cargo/bin/rustc"
-          become_user: "{{ username }}"
-
-        - name: rust - Add Cargo bin directory to PATH in .zshrc
-          lineinfile:
-            path: "{{ user_home }}/.zshrc"
-            line: 'export PATH="$HOME/.cargo/bin:$PATH"'
-            state: present
-          become_user: "{{ username }}"
-
-        - name: Verify Rust installation
-          shell: "{{ user_home }}/.cargo/bin/rustc --version"
-          register: rust_version
-          changed_when: false
-          become_user: "{{ username }}"
-
-        - debug:
-            var: rust_version.stdout
-
-      tags:
-        - rust
-
 
     - name: Dropbox installation block (deb)
       block:
@@ -481,4 +444,41 @@
           alias m='mplayer -fs -zoom'
           alias mk='minikube'
           alias tf='terraform'
+
+    - name: Rust installation block
+      block:
+
+        - name: rust - Ensure required packages are installed
+          apt:
+            name:
+              - curl
+              - build-essential
+            state: present
+            update_cache: yes
+
+        - name: Install Rust via rustup {{ user_home }} as {{ username }}
+          shell: |
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          args:
+            creates: "{{ user_home }}/.cargo/bin/rustc"
+          become_user: "{{ username }}"
+
+        - name: rust - Add Cargo bin directory to PATH in .zshrc
+          lineinfile:
+            path: "{{ user_home }}/.zshrc"
+            line: 'export PATH="$HOME/.cargo/bin:$PATH"'
+            state: present
+          become_user: "{{ username }}"
+
+        - name: Verify Rust installation
+          shell: "{{ user_home }}/.cargo/bin/rustc --version"
+          register: rust_version
+          changed_when: false
+          become_user: "{{ username }}"
+
+        - debug:
+            var: rust_version.stdout
+
+      tags:
+        - rust
 
