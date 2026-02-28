@@ -19,6 +19,10 @@ Install kvm
 sudo mkdir -p /usr/local/ssl
 sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/ssl/cert.pem
 sudo ln -sf /etc/ssl/certs /usr/local/ssl/certs
+sudo mv /etc/ld.so.conf.d/dcaenabler.conf ~/
+sudo ldconfig
+sudo apt update\nsudo apt install --reinstall curl libcurl4 libssl1.1 openssl\nsudo ldconfig
+curl --version
 ```
 
 ## Tools
@@ -57,3 +61,5 @@ sudo ln -sf /etc/ssl/certs /usr/local/ssl/certs
 
 sudo apt install --reinstall ca-certificates python3-certifi
 sudo update-ca-certificates
+
+rust didn't install because curl couldn't run.

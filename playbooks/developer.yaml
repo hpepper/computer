@@ -25,6 +25,10 @@
           - htop
           - hwinfo
           - jq
+          - libasound2-dev
+          - libudev-dev
+          - mc
+          - pkg-config
           - screen
           - shellcheck
           - silversearcher-ag
@@ -342,8 +346,6 @@
       tags:
         - vscode
 
-
-
     - name: Dropbox installation block (deb)
       block:
 
@@ -462,6 +464,7 @@
           args:
             creates: "{{ user_home }}/.cargo/bin/rustc"
           become_user: "{{ username }}"
+          warning: false
 
         - name: rust - Add Cargo bin directory to PATH in .zshrc
           lineinfile:
